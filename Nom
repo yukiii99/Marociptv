@@ -1,0 +1,227 @@
+
+package com.marociptv.app
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+private val Noir = Color(0xFF100D16)
+private val Violet = Color(0xFF8B5CF6)
+private val Carte = Color(0xFF211A2D)
+private val Blanc = Color(0xFFF7F3FF)
+
+data class MediaItem(
+    val title: String,
+    val category: String,
+    val description: String
+)
+
+private val catalogue = listOf(
+    MediaItem("Films à découvrir", "Film", "Explore les films"),
+    MediaItem("Aventures", "Film", "Films d'aventure"),
+    MediaItem("Séries populaires", "Série", "Explore les séries"),
+    MediaItem("Documentaires", "Documentaire", "Découvre les documentaires")
+)
+
+class MainActivity : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+            MarociptvApp()
+        }
+    }
+}
+
+@Composable
+fun MarociptvApp() {
+    var onglet by remember { mutableStateOf("Accueil") }
+    var recherche by remember { mutableStateOf("") }
+
+    MaterialTheme {
+        Scaffold(
+            containerColor = Noir,
+            bottomBar = {
+                NavigationBar(containerColor = Carte) {
+                    listOf("Accueil", "Films", "Séries", "Extensions")
+                        .forEach { nom ->
+                            NavigationBarItem(
+                                selected = onglet == nom,
+                                onClick = { onglet = nom },
+                                icon = {
+                                    Icon(
+                                        imageVector = when (nom) {
+                                            "Films" -> Icons.Default.Movie
+                                            "Séries" -> Icons.Default.Tv
+                                            "Extensions" -> Icons.Default.Extension
+                                            else -> Icons.Default.Home
+                                        },
+                                        contentDescription = nom
+                                    )
+                                },
+                                label = { Text(nom) },
+                                colors = NavigationBarItemDefaults.colors(
+                                    selectedIconColor = Violet,
+                                    selectedTextColor = Blanc,
+                                    indicatorColor = Color(0xFF392654),
+                                    unselectedIconColor = Color.LightGray,
+                                    unselectedTextColor = Color.LightGray
+                                )
+                            )
+                        }
+                }
+            }
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .background(Noir)
+                    .padding(18.dp)
+            ) {
+                Text(
+                    text = "Marociptv",
+                    color = Violet,
+                    fontSize = 30.sp,
+                    fontWeight = FontWeight.ExtraBold
+                )
+
+                Text(
+                    text = "Ton univers de divertissement",
+                    color = Color.LightGray
+                )
+
+                Spacer(Modifier.height(20.dp))
+
+                if (onglet != "Extensions") {
+                    OutlinedTextField(
+                        value = recherche,
+                        onValueChange = { recherche = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = {
+                            Text("Rechercher un film ou une série")
+                        },
+                        leadingIcon = {
+                            Icon(
+                                Icons.Default.Search,
+                                contentDescription = "Rechercher"
+                            )
+                        },
+                        singleLine = true,
+                        shape = RoundedCornerShape(14.dp),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedTextColor = Blanc,
+                            unfocusedTextColor = Blanc,
+                            focusedBorderColor = Violet,
+                            unfocusedBorderColor = Carte,
+                            cursorColor = Violet
+                        )
+                    )
+
+                    Spacer(Modifier.height(20.dp))
+                }
+
+                when (onglet) {
+                    "Extensions" -> {
+                        Text(
+                            "Extensions",
+                            color = Blanc,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        Text(
+                            "Bientôt : catalogues et sources compatibles.",
+                            color = Color.LightGray
+                        )
+                    }
+
+                    else -> {
+                        Text(
+                            when (onglet) {
+                                "Films" -> "Explorer les films"
+                                "Séries" -> "Explorer les séries"
+                                else -> "À découvrir"
+                            },
+                            color = Blanc,
+                            fontSize = 23.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Spacer(Modifier.height(12.dp))
+
+                        val elements = catalogue.filter { item ->
+                            (recherche.isBlank() ||
+                                item.title.contains(
+                                    recherche,
+                                    ignoreCase = true
+                                )) &&
+                            when (onglet) {
+                                "Films" -> item.category == "Film"
+                                "Séries" -> item.category == "Série"
+                                else -> true
+                            }
+                        }
+
+                        LazyColumn(
+                            verticalArrangement =
+                                Arrangement.spacedBy(12.dp)
+                        ) {
+                            items(elements) { item ->
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(
+                                            Carte,
+                                            RoundedCornerShape(16.dp)
+                                        )
+                                        .clickable { }
+                                        .padding(18.dp)
+                                ) {
+                                    Text(
+                                        item.title,
+                                        color = Blanc,
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
+
+                                    Spacer(Modifier.height(6.dp))
+
+                                    Text(
+                                        item.description,
+                                        color = Color.LightGray
+                                    )
+
+                                    Spacer(Modifier.height(10.dp))
+
+                                    Text(
+                                        item.category.uppercase(),
+                                        color = Violet,
+                                        fontSize = 12.sp
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
